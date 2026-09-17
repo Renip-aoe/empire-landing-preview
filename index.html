@@ -3,11 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>EMPIRE — второй поток</title>
+<title>EMPIRE — программа для собственников бизнеса | Алматы</title>
 <meta name="description" content="Закрытая 8-недельная программа для собственников бизнеса: позиция, материалы и окружение, где принимаются решения. 15 мест, старт 8 октября.">
 <meta property="og:title" content="EMPIRE — программа для собственников бизнеса | Алматы">
 <meta property="og:description" content="Ваш бизнес уже вырос. Теперь ваше имя должно его догнать. 15 мест, старт 8 октября.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://renip-aoe.github.io/empire-landing-preview/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -640,6 +644,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-bet
 
     <form class="form" id="lead" novalidate>
       <div class="progress" aria-hidden="true"><i class="on" id="p1"></i><i id="p2"></i><span id="p-label">Шаг 1 из 2</span></div>
+      <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
 
       <div id="step1" class="row" style="gap:18px">
         <div class="row"><label for="f-name">Имя</label><input class="field" id="f-name" name="name" autocomplete="given-name" required></div>
@@ -769,15 +774,18 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-bet
     s2.hidden = true; s1.hidden = false; document.getElementById('p2').classList.remove('on'); document.getElementById('p-label').textContent = 'Шаг 1 из 2';
   });
 
+  /* Один ID на обе отправки: вторая дописывает ту же строку в таблице */
+  var leadId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   function payload(complete){
-    var fd = new FormData(f), o = { complete: complete, page: location.href, ts: new Date().toISOString() };
+    var fd = new FormData(f), o = { id: leadId, complete: complete, page: location.href, ts: new Date().toISOString() };
     fd.forEach(function(v, k){ o[k] = v; });
     return Object.assign(o, utm);
   }
-  /* Контакт сохраняется уже после первого шага: брошенная вторая часть не теряет заявку */
+  /* Контакт сохраняется уже после первого шага: брошенная вторая часть не теряет заявку.
+     text/plain — простой запрос без CORS-предзапроса, который Google Apps Script не обрабатывает */
   function sendLead(complete){
     if (!CFG.endpoint) return;
-    try { fetch(CFG.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload(complete)), keepalive: true }); } catch (e) {}
+    try { fetch(CFG.endpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload(complete)), keepalive: true }); } catch (e) {}
   }
 
   f.addEventListener('submit', function(e){
